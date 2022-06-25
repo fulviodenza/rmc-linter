@@ -2,6 +2,14 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::str;
 
+const SPACE: u8 = 32u8;
+const COLON: u8 = 58u8;
+const EQUAL: u8 = 61u8;
+const NEWLINE: u8 = b'\n';
+const NEWTAB: u8 = b'\t';
+const OPEN_BRACE: u8 = 123u8;
+const CLOSED_BRACE: u8 = 125u8;
+
 fn main() {
     open_file().unwrap();
 }
@@ -25,7 +33,9 @@ fn tokenize_go(buffer: &mut Vec<u8>) -> Vec<String> {
 
     for (i, c) in buffer.iter().enumerate() {
         match c {
-            b' ' | 58u8 | b'=' | b'\n' | b'\t' | b'{' | b'}' if { word.len() != 0 } => {
+            &SPACE | &COLON | &EQUAL | &NEWLINE | &NEWTAB | &OPEN_BRACE | &CLOSED_BRACE
+                if { word.len() != 0 } =>
+            {
                 tokens.push(str::from_utf8(&word).unwrap().to_string());
                 word = Vec::new();
                 continue;
