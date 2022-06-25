@@ -14,43 +14,46 @@ fn open_file() -> std::io::Result<()> {
     file_copy.read_to_end(&mut contents)?;
 
     let tokens = tokenize_go(&mut contents);
-    for t in tokens {
-        print!("{} ->", t);
-    }
+    println!("{:?}", tokens);
     Ok(())
 }
 
 fn tokenize_go(buffer: &mut Vec<u8>) -> Vec<String> {
     let mut tokens: Vec<String> = Vec::new();
     let mut word: Vec<u8> = Vec::new();
-    let mut b: bool = false;
+    let mut in_str: bool = false;
 
-    for (i, _) in buffer.iter().enumerate() {
-        match buffer[i] {
-            32u8 | 58u8 | 61u8 => {
+    for (i, c) in buffer.iter().enumerate() {
+        match c {
+            b' ' | 58u8 | b'=' | b'\n' | b'\t' | b'{' | b'}' if { word.len() != 0 } => {
                 tokens.push(str::from_utf8(&word).unwrap().to_string());
                 word = Vec::new();
                 continue;
             }
+            b' ' | 58u8 | b'=' | b'\n' | b'\t' | b'{' | b'}' if { word.len() == 0 } => {
+                continue;
+            }
             34u8 => {
-                if b {
-                    if buffer[i] == b'"' {
-                        b = false;
+                if in_str {
+                    if *c == b'"' {
+                        in_str = false;
                     }
-                    println!("continuing");
                     continue;
                 }
                 let mut k = i + 1;
-                b = true;
+                in_str = true;
 
                 while buffer[k] != b'"' {
-                    println!("{}", buffer[k]);
                     word.push(buffer[k]);
                     k = k + 1;
                 }
-                println!("exited");
             }
-            _ => word.push(buffer[i]),
+            _ => {
+                if in_str {
+                    continue;
+                }
+                word.push(*c);
+            }
         }
     }
     tokens
